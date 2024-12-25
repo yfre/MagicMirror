@@ -23,6 +23,7 @@ Module.register("compliments", {
 	lastIndexUsed: -1,
 	// Set currentweather from module
 	currentWeatherType: "",
+	currentPerson: "",
 	cron_regex: /^(((\d+,)+\d+|((\d+|[*])[/]\d+|((JAN|FEB|APR|MA[RY]|JU[LN]|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|APR|MA[RY]|JU[LN]|AUG|SEP|OCT|NOV|DEC))?))|(\d+-\d+)|\d+(-\d+)?[/]\d+(-\d+)?|\d+|[*]|(MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?) ?){5}$/i,
 	date_regex: "[1-9.][0-9.][0-9.]{2}-([0][1-9]|[1][0-2])-([1-2][0-9]|[0][1-9]|[3][0-1])",
 	pre_defined_types: ["anytime", "morning", "afternoon", "evening"],
@@ -207,8 +208,16 @@ Module.register("compliments", {
 			// if doing sequential, don't fall off the end
 			index = this.lastIndexUsed >= compliments.length - 1 ? 0 : ++this.lastIndexUsed;
 		}
-
-		return compliments[index] || "";
+		let selectedCompliment = compliments[index];
+		if (selectedCompliment.indexOf("_person_")>=0) {
+			console.log("compliments found for"+this.currentPerson.length);
+			if (this.currentPerson.length>0) {
+				selectedCompliment = selectedCompliment.replace("_person_", this.currentPerson);
+			} else {
+				selectedCompliment = selectedCompliment.replace("_person_", "Stranger");
+			}
+		}
+		return selectedCompliment || "";
 	},
 
 	// Override dom generator.
@@ -243,6 +252,10 @@ Module.register("compliments", {
 	notificationReceived (notification, payload, sender) {
 		if (notification === "CURRENTWEATHER_TYPE") {
 			this.currentWeatherType = payload.type;
+		}
+		if (notification === "PERSON") {
+			this.currentPerson = payload.name;
+			this.updateDom();
 		}
 	}
 });
